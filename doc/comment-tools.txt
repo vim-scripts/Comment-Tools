@@ -1,0 +1,211 @@
+*comment-tools.txt*             Comment Tools
+
+                           Comment Tools
+
+
+
+                                                *CommentTools*
+This is the online help for Comment Tools. The Comment Tools are a set of
+scripts that allow you to manipulate comments.
+
+============================================================================
+CONTENTS
+
+0. Copying                                      |CommentTools-Copying|
+1. Requirements                                 |CommentTools-Requirements|
+2. Installation                                 |CommentTools-Install|
+3. Key Bindings                                 |CommentTools-Keybindings|
+4. Configuration                                |CommentTools-Configuration|
+5. Contact Information                          |CommentTools-Contact|
+
+============================================================================
+0. Copying                                      *CommentTools-Copying*
+
+    Comment Tools -- Manipulate Comments
+
+    Copyright (C) 2003  Johannes Tanzler
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+
+
+============================================================================
+1. Requirements                                 *CommentTools-Requirements*
+
+You need Vim 6.x with Ruby support compiled in. This means, the output of
+|:version| has to include '+ruby'.
+
+To check whether Vim is configured properly, you can issue the following
+command: >
+
+        :ruby print "hello, world!"
+<
+If Vim displays a friendly greeting instead of an error message, you're lucky.
+Otherwise, consult your local Vim guru.
+
+See |if_ruby.txt|, |+ruby| or |:version| for more details.
+
+
+============================================================================
+2. Installation                                 *CommentTools-Install*
+
+If you can read this, you've successfully unpacked the Tarball.
+With the files in the directory, do the following:
+
+  1. Copy plugin/*.vim" to your ~/.vim/plugin/ directory, or to the
+     subdirectory "plugin" of any other directory that's listed when 
+     you issue >
+
+        :set runtimepath?
+<
+  2. Copy the files and directories under ruby/* to one of the directories
+     where ruby find its libraries. To get a list of them do >
+
+        :ruby puts $:
+<
+     Note that you can point ruby to any directory by setting the $RUBYLIB
+     environment variable.
+
+  3. Copy doc/* to ~/.vim/doc/ and invoke |:helptags|: >
+
+        :helptags ~/.vim/doc
+<
+     Afterwards, you can read this document like any other Vim help file with
+     >
+        :h CommentTools
+<
+     See |add-local-help| for details.
+
+
+============================================================================
+3. Key Bindings                                 *CommentTools-Keybindings*
+
+
+<M-;>           or                              *<M-;>* *<Leader-;>*
+<Leader-;>              Insert a comment. If there's a comment already on the
+                        line, align it.
+
+If there's enough space, the comment is inserted or aligned at
+|g:CommentTools_Column| (by default: column 40). Otherwise, it's inserted 2
+spaces after the last character: >
+        
+        int i;                  /* enough space */
+        this_is_a_very_long_function_call();  /* comment is here */
+<
+On empty lines, the comment is inserted according to current indentation.
+When aligning such comments, they're formatted using Vim's internal formatting
+function (See |=|): >
+        
+       void foobar()
+       {
+           /* inserted or aligned according to intendation */
+       }
+<
+On lines ending with a word or character set in |b:CommentTools_Endwords|
+("#endif" and "}" by default), the comment is inserted 2 spaces after this
+word. Example: >
+
+        int i;                  /* at comment column */
+        #if HAS_FEATURES
+        ...
+        do_something();         /* explain what */ 
+        ...
+        #endif  /* HAS_FEATURE */
+>
+When <M-;> or <Leader-;> is invoked on a visually selected area, the comments
+of the lines within the range will be re-formatted according to the rightmost
+comment: >
+
+   /* Here the argument's comments have been inserted with M-; while
+      typing. */
+   
+   this_function_requires_a_lot_of_arguments(0,  /* foo */
+                                             2,  /* foo */
+                                             FOOBAR,  /* bar */
+                                             NULL);  /* bar */
+
+   /* When you select these four lines and press <M-;>, comments will be
+      re-formatted this way: */
+
+   this_function_requires_a_lot_of_arguments(0,       /* foo */
+                                             2,       /* foo */
+                                             FOOBAR,  /* bar */ 
+                                             NULL);   /* bar */ 
+< 
+
+============================================================================
+4. Configuration                                *CommentTools-Configuration*
+
+g:CommentTools_Column                           *g:CommentTools_Column*
+
+By default, comments are inserted at column 40. You can change
+this by setting the variable g:CommentTools_Column in your
+~/.vimrc file: >
+
+        let g:CommentTools_Column = 33
+<
+                                                *b:CommentTools_Characters*
+The CommentTools knows about comment characters for some filetypes. If your
+file type isn't supported, or you want to change the comment character, you
+can set the variable "b:CommentTools_Characters" in your
+~/.vim/plugin/<filetype>.vim.
+The variable is a comma-separated string with the start- and the
+end-character.  Examples: >
+
+        ~/.vim/ftplugin/c.vim
+        let b:CommentTools_Characters = "//"       " we use C99-style comments
+        
+        ~/.vim/ftplugin/lisp.vim
+        let b:CommentTools_Characters = ";;"       " use two ';' by default
+        
+        ~/.vim/ftplugin/cpp.vim
+        let b:CommentTools_Characters = "/*,*/"    " use c-style comments 
+                                                   " instead  of '//'
+        
+        ~/.vim/ftplugin/html.vim
+        " This is set by default and just here to illustrate again how to send
+        " start- and " end-characters:
+        let b:CommentTools_Charactes = "<!--,-->" 
+<
+See |filetype-plugin| for details.
+
+                                                *b:CommentTools_Endwords*
+By default, the words where CommentTools insert 2 spaces only are "#endif"
+and "}".  You can change this by setting a comma-separated string of
+endwords in "b:CommentTools_Endwords".  Examples: >
+
+        " File: ~/.vim/ftplugin/vim.vim
+        let b:CommentTools_Endwords = "endif,endfunction"
+        
+        " File: ~/.vim/ftplugin/c.vim
+        " Insert two spaces only after '#endif' (but not after '}')
+        let b:CommentTools_Endwords = "#endif"
+<
+
+============================================================================
+5. Contact Information                          *CommentTools-Contact*
+
+CommentTools can be downloaded at >
+
+        http://vim.sourceforge.net
+<
+or on my web site >
+
+        http://www.unet.univie.ac.at/~a9925098/
+<
+Please send bug reports, corrections, or suggestions for improvement to: >
+        
+        <jtanzler@yline.com>
+<
+vim:ft=help
